@@ -1,0 +1,118 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+int main()
+{
+	cout << "CRUD Project\n";
+	char buf[100];
+	ofstream writeFile; //파일 출력 객체 생성
+	ifstream readFile; //파일 입력 객체 생성
+	while (1)
+	{
+		cout << "shell > ";
+
+		cin.getline(buf, 100); //배열에 입력받고
+		string str(buf);//string으로 변환
+		string search; // 파일에서 찾은 문자열 저장
+		int p1 = str.find("="), p2 = str.find("del");
+		bool t = 1;
+		if(p1 != -1) // 등호 입력했을 때
+		{
+			//search.substr(0, search.find('=')) == str.substr(0, p1)
+			readFile.open("db.txt");// 파일 열기
+			while (!readFile.eof())
+			{			
+				getline(readFile, search);
+				if (search == str)
+				{
+					cout << " 중복된 값입니다." << endl;
+					t = 0;
+					break;
+				}
+				if (search.substr(0, search.find('=')) == str.substr(0, p1) && (search.substr(search.find('=')) != str.substr(p1))) //변수 이름은 같고 값이 다를 경우
+				{
+					t = 0;
+					string tmp = str; //대체할 문장을 임시로 저장함
+					str = str.substr(p1);//지울 문자 저장
+					vector <string> arr;
+					while (!readFile.eof())
+					{
+						getline(readFile, search);
+						if (search.substr(0, search.find('=')) == str)
+							continue;
+						else
+							arr.push_back(search);
+					}
+					writeFile.open("db.txt", ios::out);
+					for (int i = 0; i < arr.size(); i++)
+						writeFile << arr[i];
+					writeFile << endl;
+					writeFile << tmp << endl;
+					writeFile.close();
+					int j = 0;
+					for (j = 0; buf[j] != '='; j++)
+						cout << buf[j];
+					j++;
+					cout << " : ";
+					for (; buf[j] != NULL; j++)
+						cout << buf[j];
+					cout << "변경됨" << endl;
+				}
+			}
+			readFile.close();
+			if (t)
+			{
+				writeFile.open("db.txt", ios::app);
+				writeFile << buf << endl;//파일에 입력
+				writeFile.close();
+				int j = 0;
+				for (j = 0; buf[j] != '='; j++)
+					cout << buf[j];
+				j++;
+				cout << " : ";
+				for (; buf[j] != NULL; j++)
+					cout << buf[j];
+				cout << "저장됨" << endl;
+			}
+		}
+		if (p2 != -1)
+		{
+			str = str.substr(4);//지울 문자 저장
+			readFile.open("db.txt");// 파일 열기
+			vector <string> arr;
+			while (!readFile.eof())
+			{
+				getline(readFile, search);
+				if (search.substr(0, search.find('=')) == str)
+					continue;
+				else
+					arr.push_back(search);
+			}
+			writeFile.open("db.txt", ios::out);
+			for (int i = 0; i < arr.size(); i++)
+				writeFile << arr[i];
+			writeFile.close();
+			readFile.close();
+			cout << str << "값이 삭제되었습니다." << endl;
+		}
+		readFile.open("db.txt");// 파일에서 읽어올 수 있도록 열기
+		if(buf[0] != NULL)
+			while (!readFile.eof())
+			{
+				getline(readFile, search);
+				int i = search.find("=");
+				if (search.substr(0, i) == str)
+					cout << search.substr(0, i) << "=" << search.substr(i + 1) << endl;
+				else
+					continue;
+			}
+		readFile.close();
+		if (str == "exit")
+			break;
+	}
+}
